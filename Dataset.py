@@ -44,6 +44,5 @@ class LOBDataset(Dataset):
     
    
     def __getitem__(self, index):
-        end_index = 
         
         return index, self.dataset[index]
