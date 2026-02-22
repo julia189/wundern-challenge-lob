@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import torch
 from torch.utils.data.dataset import Dataset
 
@@ -15,23 +16,18 @@ class LOBDataset(Dataset):
         self.n_steps = n_steps
         self.n_features = data.values.shape[1]
 
-        #TODO: sequences are independent, adjust normalization per sequence
-        mean = data.mean()
-        std = data.std()
-        df = (data - mean) / std
-        self.mean = torch.tensor(mean.to_numpy()).reshape(1, -1)
-        self.std = torch.tensor(std.to_numpy()).reshape(1, -1)
-
         seq_ids = torch.LongTensor(data.index.get_level_values(0).to_numpy())
         step_ids = torch.LongTensor(data.index.get_level_values(1).to_numpy())
-        features = torch.FloatTensor(data.values)
+        
+        features_normalized = data.groupby(level=0).apply(lambda x: (x - x.mean()) / x.std())
+        features_normalized.reset_index(level=0, drop=True, inplace=True)
 
-        self.dataset = self.__stack__(seq_ids, step_ids, features)
+        self.dataset = self.__stack__(seq_ids, step_ids, features_normalized.values)
 
     def __stack__(self, seq_ids, step_ids, features):
 
         data = torch.zeros(self.n_seq, self.n_steps, self.n_features)
-        data[seq_ids, step_ids] = features
+        data[seq_ids, step_ids] = torch.FloatTensor(features)
 
         return data
 
