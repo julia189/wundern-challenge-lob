@@ -26,7 +26,7 @@ class PredictionModel:
         
         # Determine paths
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        onnx_path = os.path.join(base_dir, f"{pd.Timestamp.today()}_lstm_v1.onnx")
+        onnx_path = os.path.join(base_dir, "2026-02-23_lstm_v1.onnx")
         
         # Initialize ONNX Runtime Session
         sess_options = ort.SessionOptions()
@@ -75,7 +75,7 @@ class PredictionModel:
          # Run inference
         ort_inputs = {self.input_name: data_tensor}
         # Output shape from our VanillaLSTM is (1, 2) because we select the last step inside the model
-        output = self.ort_session.run([self.output_name], ort_inputs)[0]
+        output, hidden, memory = self.ort_session.run([self.output_name], ort_inputs)[0]
         
         if len(output.shape) == 3:
             # If model returns (Batch, Seq, Features)
