@@ -26,7 +26,7 @@ class PredictionModel:
         
         # Determine paths
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        onnx_path = os.path.join(base_dir, "2026-02-23_lstm_v1.onnx")
+        onnx_path = os.path.join(base_dir, model_path)
         
         # Initialize ONNX Runtime Session
         sess_options = ort.SessionOptions()
@@ -90,6 +90,7 @@ class PredictionModel:
 if __name__ == "__main__":
     # Local testing
     test_file = f"{CURRENT_DIR}/datasets/valid.parquet"
+    model_path = f"{CURRENT_DIR}/2026-02-23_lstm_v1.onnx"
     
     if os.path.exists(test_file):
         model = PredictionModel()
