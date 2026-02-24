@@ -39,7 +39,13 @@ class PredictionModel:
         try:
             self.ort_session = ort.InferenceSession(onnx_path, sess_options, providers=['CPUExecutionProvider'])
             self.input_name = self.ort_session.get_inputs()[0].name
+            self.hidden_name = self.ort_session.get_inputs()[1].name
+            self.memory_name = self.ort_session.get_inputs()[2].name
+            
             self.output_name = self.ort_session.get_outputs()[0].name
+            self.hidden_output_name = self.ort_session.get_outputs()[1].name
+            self.memory_output_name = self.ort_session.get_outputs()[2].name
+            
             print(f"Loaded ONNX model from {onnx_path}")
                 
         except Exception as e:
@@ -71,11 +77,19 @@ class PredictionModel:
         
         # Add batch dimension: (1, Sequence_Length, Features)
         data_tensor = np.expand_dims(data_arr, axis=0)
+
         
+        #device = torch.device(0 if torch.cuda.is_available() else 'cpu')
+        batch_size = data_tensor.shape[0]
+        hidden = np.zeros((1, batch_size, 128), dtype=np.float32)
+        memory = np.zeros((1, batch_size, 128), dtype=np.float32)
+
          # Run inference
-        ort_inputs = {self.input_name: data_tensor}
-        # Output shape from our VanillaLSTM is (1, 2) because we select the last step inside the model
-        output, hidden, memory = self.ort_session.run([self.output_name], ort_inputs)[0]
+        ort_inputs = {self.input_name: data_tensor.astype(np.float32), self.hidden_name: hidden, self.memory_name: memory}
+        
+        output = self.ort_session.run([self.output_name, 
+                                       self.hidden_output_name, 
+                                       self.memory_output_name], ort_inputs)[0]
         
         if len(output.shape) == 3:
             # If model returns (Batch, Seq, Features)
@@ -90,10 +104,10 @@ class PredictionModel:
 if __name__ == "__main__":
     # Local testing
     test_file = f"{CURRENT_DIR}/datasets/valid.parquet"
-    model_path = f"{CURRENT_DIR}/2026-02-23_lstm_v1.onnx"
+    model_path = f"{CURRENT_DIR}/2026-02-24_lstm_v1.onnx"
     
     if os.path.exists(test_file):
-        model = PredictionModel()
+        model = PredictionModel(model_path=model_path)
         scorer = ScorerStepByStep(test_file)
         
         print("Testing LSTM Model")
