@@ -209,3 +209,8 @@ __marimo__/
 
 *.parquet
 .DS_Store
+
+*.zip
+*.onnx.data
+*.onnx
+
