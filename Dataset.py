@@ -33,7 +33,7 @@ class LOBDataset(Dataset):
 
 
     def __n_sequences__(self):
-        return self.n_seq
+        return self.dataset.shape[0]
     
     def __len__(self):
         return self.n_steps
