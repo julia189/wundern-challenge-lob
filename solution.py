@@ -23,7 +23,7 @@ class PredictionModel:
         
         # Determine paths
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        onnx_path = os.path.join(base_dir, "2026-02-25_lstm_v1.onnx")
+        onnx_path = os.path.join(base_dir, "2026-02-28_lstm_v1.onnx")
         
         # Initialize ONNX Runtime Session
         sess_options = ort.SessionOptions()
