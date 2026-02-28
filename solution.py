@@ -1,9 +1,6 @@
 import os
 import sys
 import numpy as np
-import joblib
-import torch
-import pandas as pd 
 
 # Adjust path to import utils from parent directory
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -26,7 +23,7 @@ class PredictionModel:
         
         # Determine paths
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        onnx_path = os.path.join(base_dir, model_path)
+        onnx_path = os.path.join(base_dir, "2026-02-25_lstm_v1.onnx")
         
         # Initialize ONNX Runtime Session
         sess_options = ort.SessionOptions()
@@ -35,6 +32,7 @@ class PredictionModel:
         sess_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
         
         self.ort_session = None
+        self.input_name = None
 
         try:
             self.ort_session = ort.InferenceSession(onnx_path, sess_options, providers=['CPUExecutionProvider'])
@@ -50,6 +48,7 @@ class PredictionModel:
                 
         except Exception as e:
             print(f"Error loading model resources: {e}")
+            self.ort_session = None
 
     def predict(self, data_point: DataPoint) -> np.ndarray:
         # Reset state on new sequence
@@ -64,6 +63,9 @@ class PredictionModel:
         if not data_point.need_prediction:
             return None
             
+        if self.ort_session is None:
+            return np.zeros(2)
+
         # Prepare input window (last 100 steps)
         # The model was trained with a context window of 100
         history_window = self.sequence_history[-100:]
@@ -104,10 +106,9 @@ class PredictionModel:
 if __name__ == "__main__":
     # Local testing
     test_file = f"{CURRENT_DIR}/datasets/valid.parquet"
-    model_path = f"{CURRENT_DIR}/2026-02-24_lstm_v1.onnx"
     
     if os.path.exists(test_file):
-        model = PredictionModel(model_path=model_path)
+        model = PredictionModel()
         scorer = ScorerStepByStep(test_file)
         
         print("Testing LSTM Model")
